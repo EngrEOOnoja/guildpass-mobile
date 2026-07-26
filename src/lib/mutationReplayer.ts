@@ -1,5 +1,6 @@
 import NetInfo, { NetInfoState } from "@react-native-community/netinfo";
 import { mutationQueue, QueueItem } from "./mutationQueue";
+import { queryClient } from "./queryClient";
 
 export type ApiDispatcher = (item: QueueItem) => Promise<void>;
 
@@ -82,6 +83,9 @@ class MutationReplayer {
           await this.dispatcher(item);
           // Success! Remove from queue.
           await mutationQueue.dequeue(item.id);
+          
+          // Invalidate queries so read-cache stays coherent
+          await queryClient.invalidateQueries();
         } catch (error: any) {
           const status = error.status;
           
